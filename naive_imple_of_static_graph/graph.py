@@ -9,9 +9,10 @@ s = x + y
 operator, 而naive_graph又要引用operator_template, 这里分开写存在circular import的问题。
 """
 import random
+import matplotlib.pyplot as plt
 from random import randint
 from math import prod, e
-from math import exp as math_exp, log as math_log
+from math import log as math_log, pow as math_pow
 from math import sin as math_sin, cos as math_cos
 
 
@@ -29,17 +30,15 @@ class Graph:
         # 可以根据与a相连的上游节点（node.last）来计算节点计算的结果。
         "add": lambda node: sum([last.get_value() for last in node.last]),
         "mul": lambda node: prod([last.get_value() for last in node.last]),
-        "div":
-            lambda node: node.last[0].get_value() / node.last[1].get_value(),
-        "sub":
-            lambda node: node.last[0].get_value() - node.last[1].get_value(),
-        "exp": lambda node: math_exp(node.last[0].get_value()),
+        "div": lambda node: node.last[0].get_value() / node.last[1].get_value(),
+        "sub": lambda node: node.last[0].get_value() - node.last[1].get_value(),
+        "pow": lambda node: math_pow(node.last[0].get_value(), node.last[1].get_value()),
+        # "exp": lambda node: math_exp(node.last[0].get_value()),
         "log": lambda node: math_log(node.last[0].get_value()),
         "sin": lambda node: math_sin(node.last[0].get_value()),
         "cos": lambda node: math_cos(node.last[0].get_value()),
+
     }
-
-
 
     class Node:
         def __init__(self):
@@ -83,11 +82,11 @@ class Graph:
         def __sub__(self, node):    # 重构减法
             return Graph.sub(self, node)
 
-        def __rpow__(self, power):  # 重构指数
-            if power == e:
-                return Graph.exp(self)
-            else:
-                raise ValueError("Only power of e is supported!")
+        def __pow__(self, node):
+            return Graph.pow(self, node)
+
+        def __rpow__(self, node):  # 重构指数
+            return Graph.pow(node, self)
 
         """ 
         接下来还需要实现log, sin, cos的重载 
@@ -127,13 +126,13 @@ class Graph:
     class Constant(Node):
         def __init__(self, value):
             super().__init__()
-            self.__value = float(value)
+            self.value = float(value)
 
         def get_value(self):
-            return self.__value
+            return self.value
 
         def __repr__(self):
-            return str(self.__value)
+            return str(self.value)
 
     class Variable(Node):
         def __init__(self, value):
@@ -238,6 +237,10 @@ class Graph:
         return Graph.binary_function_frame(node1, node2, "sub")
 
     @classmethod
+    def pow(cls, node1, node2):
+        return Graph.binary_function_frame(node1, node2, "pow")
+
+    @classmethod
     def exp(cls, node1):
         return Graph.unary_function_frame(node1, "exp")
 
@@ -292,8 +295,11 @@ class Graph:
             return -child.last[0].value/(child.last[1].value**2)
 
     @classmethod
-    def __deriv_exp(cls, child, parent):
-        return child.value
+    def __deriv_pow(cls, child, parent):
+        if child.last[0] == parent:
+            return child.last[1].value * math_pow(child.last[0].value, child.last[1].value - 1)
+        elif child.last[1] == parent:
+            return child.value * math_log(child.last[0].value)
 
     @classmethod
     def __deriv_log(cls, child, parent):
@@ -314,7 +320,7 @@ class Graph:
             "sub": cls.__deriv_sub,
             "mul": cls.__deriv_mul,
             "div": cls.__deriv_div,
-            "exp": cls.__deriv_exp,
+            "pow": cls.__deriv_pow,
             "log": cls.__deriv_log,
             "sin": cls.__deriv_sin,
             "cos": cls.__deriv_cos
@@ -398,7 +404,7 @@ class Graph:
                 last_node.out_deg -= 1
                 last_node.out_deg_com += 1
                 # 如果上游节点的出度变成了0，即可以求到这个节点的导数，并将其删除，重复上述过程
-                if last_node.out_deg == 0 and not isinstance(last_node, Graph.Constant):
+                if last_node.out_deg == 0 and not isinstance(last_node, cls.Constant):
                     # last_node的梯度由其所有出度传回来的梯度和
                     for n in last_node.next:
                         last_node.grad += n.grad * cls.__deriv(n, last_node)
@@ -427,10 +433,27 @@ class Graph:
                 node_queue.append(node)
 
         while len(node_queue) > 0:
-            ...
+            node = node_queue.pop()
+            # 依次删除每个出度=0的节点，并更新其上游节点的出度
+            for last_node in node.last:
+                last_node.out_deg -= 1
+                last_node.out_deg_com += 1
+                # 如果上游节点的出度变成了0，即可以求到这个节点的导数，并将其删除，重复上述过程
+                if last_node.out_deg == 0 and not isinstance(last_node, Graph.Constant):
+                    # last_node的梯度由其所有出度传回来的梯度和
+                    for n in last_node.next:
+                        last_node.grad += n.grad * cls.__deriv(n, last_node)
+                    # 下个循环将继续删除该出度为0的节点
+                    node_queue.insert(0, last_node)
+
+            # 恢复所有节点的出度
+        for node in cls.node_list:
+            node.out_deg += node.out_deg_com
+            node.out_deg_com = 0
+
 
 if __name__ == "__main__":
-    """ Addition """
+    """ Example: Addition """
     x = Graph.Variable(1)
     y = Graph.Variable(2)
     z = Graph.Variable(3)
@@ -443,7 +466,7 @@ if __name__ == "__main__":
     print(Graph.node_list[3].last)
     Graph.clear()
 
-    """ Exp"""
+    """ Example: Exp"""
     a = Graph.Variable(4)
     m = e**a
     print(Graph.node_list)
@@ -451,7 +474,7 @@ if __name__ == "__main__":
     print(Graph.node_list[1].last)
     Graph.clear()
 
-    """ Sin """
+    """ Example: Sin """
     q = Graph.Variable(5)
     t = q.sin()
     r = t.cos()
@@ -460,15 +483,17 @@ if __name__ == "__main__":
     print(t.last)
     Graph.clear()
 
-    """ Forward pass """
+    """ Example: Forward pass """
     x = Graph.Variable(1)
     y = Graph.Variable(2)
     z = Graph.Variable(3)
     s = x - y.sin() + e**z
     Graph.forward()
     print(s.value)
+    print(x.next, y.next, z.next)
+    print(s)
 
-    """ Backward pass """
+    """ Example: Backward pass """
     Graph.backward()
     print(Graph.node_list)
     print(x.grad)
@@ -476,13 +501,35 @@ if __name__ == "__main__":
     print(z.grad)
     Graph.kill_grad()
 
-    """ Backward pass from node """
+    """ Example: Backward pass from node """
     Graph.backward(s)
     print(Graph.node_list)
     print(x.grad)
     print(y.grad)
     print(z.grad)
     Graph.kill_grad()
+    Graph.clear()
+
+    """ Example: Find the lowest value for function f """
+    x = Graph.Variable(6)       # x初始值为3
+    y = Graph.Constant(7)
+    z = Graph.Constant(10)
+    f = ((x - y) ** 2 + 10).log()
+    lr = 0.01      # random learning rate
+    history = []
+    for _ in range(2000):
+        Graph.forward()
+        Graph.backward(f)
+        x.value = x.value - x.grad * lr
+        print(x)
+        Graph.kill_grad()
+        history.append(f.value)
+    plt.plot(history)
+    plt.show()
+
+
+
+
 
 
 

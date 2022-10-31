@@ -7,7 +7,7 @@
 即在graph.py中继承naive_graph.py中的naive_Graph类.
 """
 
-from operator import *
+from operators import *
 from node import *
 
 

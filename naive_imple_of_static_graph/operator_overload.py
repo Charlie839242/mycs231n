@@ -15,7 +15,7 @@ s = x + y
 这样用户接触到的就是add函数而非commutable_binary_function_frame函数
 这些函数应该是naive_Graph的类方法
 """
-from operator import *
+from operators import *
 
 
 @classmethod
