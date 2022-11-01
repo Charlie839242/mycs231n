@@ -1,4 +1,4 @@
-## Intro
+# Intro
 
 这里我们参考计算图（静态图）的思想，来构造一个非常naive的计算图框架。非常naive是指计算图中没有矩阵参与运算，而都是浮点数在运算。对这个计算图框架，我们希望它具有：
 
@@ -16,13 +16,13 @@
 
 
 
-## Reading Sequence：
+# Reading Sequence：
 
 naive_graph.py → node.py → operators.py → operator_template.py → operator_overload.py → graph.py
 
 
 
-## naive_graph.py
+# naive_graph.py
 
 在这里，我们首先抽象出计算图（Computational Graph）以及构成计算图的节点（Node）并编写二者的class。
 
@@ -103,7 +103,7 @@ class naive_Graph:
 
 
 
-## node.py
+# node.py
 
 在上面的过程中，我们定义了计算图和计算图节点的基本结构。
 
@@ -158,7 +158,7 @@ class PlaceHolder(naive_Graph.Node):
 
 
 
-## operator.py
+# operator.py
 
 上面定义的三种数据Constant、Variable和Placeholder是独立的，相互之间还不能进行运算。因此我们定义Operator类（一个operator也是计算图中的一个节点）来实现三种数据的运算。Operator也是具有值和梯度的，但是Operator比起那三种数据结构要多出关于怎么计算指定Operator的信息，我们将这一部分信息储存在属性self.calculate里面。所以，Operator类可以继承自Variable。
 
@@ -206,7 +206,7 @@ y.build_edge(add)           # 构建 y → add 的有向边
 
 
 
-## operator_template.py
+# operator_template.py
 
 完成operator.py后，我们发现每次构建一张图，我们都需要定义变量（这是我们可以接受的），但还要定义operator的节点以及手动构建有向边（这是我们不想要的）。
 
@@ -292,7 +292,7 @@ operator = commutable_binary_function_frame(x, y, 'add')
 
 
 
-## operator_overload.py
+# operator_overload.py
 
 上述定义了三个函数模板，但不能让用户根据自己所采用operator来选择需要的函数模板。我们需要针对具体不同的operator（’add‘，’sub‘，······）继续进行封装，也就是要预先决定每个operator采用哪个函数模板。
 
@@ -395,7 +395,7 @@ class Node:
 
 
 
-## Deriavative
+# Deriavative
 
 我们针对八种算子定义了其前向传播，我们还需要定义这八种算子的梯度以进行反向传播。
 
@@ -469,7 +469,7 @@ def __deriv_cos(cls, child, parent):
 
 
 
-## Forward pass
+# Forward pass
 
 下一步就可以进行前向传播。计算图本质上是一个有向无环图（DAG），因此进行前向传播就是对这个DAG进行**拓扑排序**来得到一个线性序列。
 
@@ -518,7 +518,7 @@ def forward(cls):
 
 
 
-## Backward propagation
+# Backward propagation
 
 和前向传播类似，反向传播实际上就是一个DAG的**逆拓扑排序**。
 
@@ -581,7 +581,7 @@ def backward(cls, y=None):
 
 
 
-## Example
+# Example
 
 对函数$f(x)=log((x-7)^2+10)$找到其最低点。
 
