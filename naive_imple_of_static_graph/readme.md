@@ -498,16 +498,16 @@ def forward(cls):
         if node.in_deg == 0:
             node_queue.append(node)
 
-            while len(node_queue) > 0:
-                node = node_queue.pop()
-                # 依次删除每个入度为0的节点，并更新其下游节点的入度
-                for next_node in node.next:
-                    next_node.in_deg -= 1
-                    next_node.in_deg_com += 1
-                    # 若下游节点入度是0，则计算其值并删除该节点，重复上述过程
-                    if next_node.in_deg == 0:
-                        next_node.value = next_node.calculate(next_node)
-                        node_queue.insert(0, next_node)
+    while len(node_queue) > 0:
+        node = node_queue.pop()
+        # 依次删除每个入度为0的节点，并更新其下游节点的入度
+        for next_node in node.next:
+            next_node.in_deg -= 1
+            next_node.in_deg_com += 1
+            # 若下游节点入度是0，则计算其值并删除该节点，重复上述过程
+            if next_node.in_deg == 0:
+                next_node.value = next_node.calculate(next_node)
+                node_queue.insert(0, next_node)
 
     # 通过in_deg_com来还原in_deg
     for node in cls.node_list:
