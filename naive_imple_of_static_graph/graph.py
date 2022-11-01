@@ -37,7 +37,6 @@ class Graph:
         "log": lambda node: math_log(node.last[0].get_value()),
         "sin": lambda node: math_sin(node.last[0].get_value()),
         "cos": lambda node: math_cos(node.last[0].get_value()),
-
     }
 
     class Node:
@@ -46,13 +45,6 @@ class Graph:
             Initialize Graph.Node is equal to create a new node that
             hasn't been connected to anything and add it into the Graph.
             """
-            # 为self生成唯一的节点id
-            while True:
-                new_id = randint(0, 1000)
-                if new_id not in Graph.id_list:
-                    break
-            self.id: int = new_id
-
             self.next = list()  # 与self直接相连的下游节点
             self.last = list()  # 与self直接相连的上游节点
             self.in_deg, self.in_deg_com = 0, 0     # 节点入度
@@ -105,13 +97,11 @@ class Graph:
     def add_node(cls, node):
         # 在计算图中加入节点
         cls.node_list.append(node)
-        cls.id_list.append(node.id)
 
     @classmethod
     def clear(cls):
         # 清空计算图
         cls.node_list.clear()
-        cls.id_list.clear()
 
     @classmethod
     def kill_grad(cls):

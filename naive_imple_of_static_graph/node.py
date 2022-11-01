@@ -13,13 +13,13 @@ Tensorflow中有三种变量：常量（Constant）；变量（Variable）；占
 class Constant(naive_Graph.Node):
     def __init__(self, value):
         super().__init__()
-        self.__value = float(value)
+        self.value = float(value)
 
     def get_value(self):
-        return self.__value
+        return self.value
 
     def __repr__(self):
-        return str(self.__value)
+        return str(self.value)
 
 
 class Variable(naive_Graph.Node):
@@ -51,5 +51,4 @@ class PlaceHolder(naive_Graph.Node):
 if __name__ == "__main__":
     random.seed(1)
     c = Constant(1)
-    print(c.id)
     print(c)
