@@ -606,7 +606,7 @@ plt.show()
 
 优化过程如下：
 
-![image](.\img\Figure_1.png)  
+![image](https://github.com/Charlie839242/mycs231n/blob/main/naive_imple_of_static_graph/img/Figure_1.png)  
 
 
 
