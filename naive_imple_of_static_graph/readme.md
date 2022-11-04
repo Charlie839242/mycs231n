@@ -583,14 +583,12 @@ def backward(cls, y=None):
 
 # Example
 
-对函数$f(x)=log((x-7)^2+10)$找到其最低点。
+对函数$f(x)=log((x-7)^2+10)$找到最小值。
 
 ```Python
 """ Example: Find the lowest value for function f """
 x = Graph.Variable(6)  	# x初始值为6
-y = Graph.Constant(7)
-z = Graph.Constant(10)
-f = ((x - y) ** 2 + 10).log()
+f = ((x - 7) ** 2 + 10).log()
 lr = 0.01  # random learning rate
 history = []
 for _ in range(2000):
@@ -609,6 +607,30 @@ plt.show()
 ![image](https://github.com/Charlie839242/mycs231n/blob/main/naive_imple_of_static_graph/img/Figure_1.png)  
 
 
+
+对函数$f(x,y)=\frac{1}{2}x^2+xy+\frac{1}{2}y^2-2x-2y$找到最小值。
+
+```Python
+""" Example: Find the lowest value for a binary function  """
+x, y = Graph.Variable(6), Graph.Variable(6)
+f = 0.5 * x ** 2 + x * y + 0.5 * y ** 2 - 2 * x - 2 * y
+lr = 0.01  # random learning rate
+history = []
+for _ in range(1000):
+    Graph.forward()
+    Graph.backward(f)
+    x.value = x.value - x.grad * lr
+    y.value = y.value - y.grad * lr
+    Graph.kill_grad()
+    history.append(f.value)
+plt.plot(history)
+plt.show()
+Graph.clear()
+```
+
+优化过程如下：
+
+![image](https://github.com/Charlie839242/mycs231n/blob/main/naive_imple_of_static_graph/img/Figure_2.png)  
 
 
 

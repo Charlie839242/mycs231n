@@ -21,10 +21,9 @@ class Graph:
     Define the class for the computational graph
     and the node in computational graph.
     """
-    # 全局只有一个计算图，即node_list和id_list是全局唯一的
-    # 且这样写可以不用实例化naive_Graph而操作和查看node_list和id_list
+    # 全局只有一个计算图，即node_list是全局唯一的
+    # 且这样写可以不用实例化naive_Graph而操作和查看node_list
     node_list = []  # 图节点列表
-    id_list = []    # 节点ID列表
     operator_calculate_table = {
         # operator_calculate_table针对不同运算，给定一个节点a，
         # 可以根据与a相连的上游节点（node.last）来计算节点计算的结果。
@@ -62,11 +61,14 @@ class Graph:
         def __add__(self, node):    # 重构加法: self出现在加号左边
             return Graph.add(self, node)
 
-        # def __radd__(self, node):   # 重构加法: self出现在加号右边
-        #     return Graph.add(node, self)
+        def __radd__(self, other):
+            return Graph.add(node, self)
 
         def __mul__(self, node):    # 重构乘法
             return Graph.mul(self, node)
+
+        def __rmul__(self, other):
+            return Graph.mul(other, self)
 
         def __truediv__(self, node):    # 重构除法
             return Graph.div(self, node)
@@ -406,41 +408,6 @@ class Graph:
             node.out_deg += node.out_deg_com
             node.out_deg_com = 0
 
-    @classmethod
-    def backward_from_node(cls, y):
-        assert type(y) != cls.Constant, "常量无法求导"
-
-        node_queue = []
-        for node in cls.node_list:
-            if node.out_deg == 0 and not isinstance(
-                    node,
-                    cls.Constant,
-            ):
-                if node == y:
-                    node.grad = 1.
-                else:
-                    node.grad = 0.
-                node_queue.append(node)
-
-        while len(node_queue) > 0:
-            node = node_queue.pop()
-            # 依次删除每个出度=0的节点，并更新其上游节点的出度
-            for last_node in node.last:
-                last_node.out_deg -= 1
-                last_node.out_deg_com += 1
-                # 如果上游节点的出度变成了0，即可以求到这个节点的导数，并将其删除，重复上述过程
-                if last_node.out_deg == 0 and not isinstance(last_node, Graph.Constant):
-                    # last_node的梯度由其所有出度传回来的梯度和
-                    for n in last_node.next:
-                        last_node.grad += n.grad * cls.__deriv(n, last_node)
-                    # 下个循环将继续删除该出度为0的节点
-                    node_queue.insert(0, last_node)
-
-            # 恢复所有节点的出度
-        for node in cls.node_list:
-            node.out_deg += node.out_deg_com
-            node.out_deg_com = 0
-
 
 if __name__ == "__main__":
     """ Example: Addition """
@@ -502,20 +469,39 @@ if __name__ == "__main__":
 
     """ Example: Find the lowest value for function f """
     x = Graph.Variable(6)       # x初始值为3
-    y = Graph.Constant(7)
-    z = Graph.Constant(10)
-    f = ((x - y) ** 2 + 10).log()
+    f = ((x - 7) ** 2 + 10).log()
     lr = 0.01      # random learning rate
     history = []
     for _ in range(2000):
         Graph.forward()
         Graph.backward(f)
         x.value = x.value - x.grad * lr
-        print(x)
         Graph.kill_grad()
         history.append(f.value)
     plt.plot(history)
     plt.show()
+    Graph.clear()
+
+    """ Example: Find the lowest value for a binary function  """
+    x, y = Graph.Variable(6), Graph.Variable(6)
+    f = 0.5 * x**2 + x*y + 0.5*y**2 - 2*x - 2*y
+    lr = 0.01      # random learning rate
+    history = []
+    for _ in range(1000):
+        Graph.forward()
+        Graph.backward(f)
+        x.value = x.value - x.grad * lr
+        y.value = y.value - y.grad * lr
+        Graph.kill_grad()
+        history.append(f.value)
+    plt.plot(history)
+    plt.show()
+    Graph.clear()
+
+
+
+
+
 
 
 
