@@ -456,20 +456,7 @@ def backward(self, retain_graph=False):
             node.out_deg += node.out_deg_com
             node.out_deg_com = 0
     else:
-        # 释放计算图：删除所有非叶子节点
-        new_list = []
-        for node in Graph.node_list:
-            if len(node.last) == 0:
-                # is leaf
-                new_list.append(node)
-            else:
-                # 清除节点信息
-                node.next.clear()
-                node.last.clear()
-            node.next.clear()
-            node.out_deg = 0
-            node.out_deg_com = 0
-        Graph.node_list = new_list
+		Graph.free_graph()
 ```
 
 
