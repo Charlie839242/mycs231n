@@ -466,5 +466,5 @@ plt.show()
 
 最终优化过程如下：
 
-![image](https://github.com/Charlie839242/mycs231n/blob/main/vectorized_imple_of_dynamic_graph/img/Figure_2.png)  
+![image](https://github.com/Charlie839242/mycs231n/blob/main/vectorized_imple_of_dynamic_graph/img/Figure_1.png)  
 
